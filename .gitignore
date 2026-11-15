@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+outputs/
+gguf_export/
+*.gguf
+.ipynb_checkpoints/
+test_outputs/

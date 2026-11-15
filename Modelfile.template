@@ -1,0 +1,62 @@
+# Ollama Modelfile template for distilled Qwen3.5-2B Exam Generator (Q4_K_M GGUF)
+# Usage:
+#   1. Replace {{GGUF_PATH}} with the path to your exported Q4_K_M .gguf file
+#      (e.g., ./qwen3.5_2b_exam_gguf/Qwen3.5-2B.Q4_K_M.gguf)
+#   2. Create the Ollama model:
+#      ollama create qwen3.5-exam -f Modelfile
+#   3. Run locally (fits comfortably in RTX 3050 4GB & RTX 5060 Ti 16GB):
+#      ollama run qwen3.5-exam
+
+FROM {{GGUF_PATH}}
+
+TEMPLATE """{{- if .Messages }}{{- if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{- range $i, $_ := .Messages }}{{- $last := eq (len (slice $.Messages $i)) 1 -}}{{- if eq .Role "user" }}<|im_start|>user
+{{ .Content }}<|im_end|>
+{{ else if eq .Role "assistant" }}<|im_start|>assistant
+<think>
+
+</think>
+
+{{ .Content }}{{ if not $last }}<|im_end|>
+{{ end }}{{- end }}{{- if and (ne .Role "assistant") $last }}<|im_start|>assistant
+<think>
+
+</think>
+
+{{ end }}{{- end }}{{- else }}{{- if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{- if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+<think>
+
+</think>
+
+{{ end }}{{ .Response }}{{ if .Response }}<|im_end|>{{ end }}"""
+
+SYSTEM """You are an expert exam designer. Create rigorous exams matching the requested topic, audience level, format, count, and language (Indonesian or English).
+
+Rules:
+- MCQ counts: 4 options (A-D) for SD/SMP; 5 options (A-E) for SMA/SMK/Kuliah/University.
+- Stems & stimuli: Self-contained with all constants/data. Ground C3-C6 items in authentic stimuli (data, code, scenarios). Bold and capitalize negative markers (**BUKAN**, **KECUALI**, **NOT**, **EXCEPT**); no double negatives.
+- Distractors: Misconception-driven, same-scope, length- and tone-calibrated. No "All/None of the above" or "Semua benar/salah". Order numeric/sequential options monotonically.
+- Complex MCQ & Essay/Case: Complex MCQs need independently verifiable statements and an explicit scoring/selection rule. Essays/cases need concrete tasks (predict, trace, diagnose, fix, defend trade-offs) with per-part point weights (e.g., [10 poin] or [10 pts]).
+- Audit: Solve from scratch, balance MCQ key letters, and exclude answers, hints, and Bloom labels from the student sheet unless requested.
+
+Output ONLY these two tagged sections:
+<<<STUDENT_SHEET>>>
+Header, instructions, and numbered questions only.
+<<</STUDENT_SHEET>>>
+<<<ANSWER_KEY>>>
+MCQ: correct letter, why right, and one line per distractor naming its misconception. Essay/Case: model solution and point breakdown summing to each sub-part weight.
+<<</ANSWER_KEY>>>"""
+
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|endoftext|>"
+PARAMETER num_ctx 4096
+PARAMETER temperature 0.6
+PARAMETER top_p 0.85
+PARAMETER top_k 20
+PARAMETER repeat_penalty 1.05
