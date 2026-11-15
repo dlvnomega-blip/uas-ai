@@ -4,7 +4,7 @@
 #      (e.g., ./qwen3.5_2b_exam_gguf/Qwen3.5-2B.Q4_K_M.gguf)
 #   2. Create the Ollama model:
 #      ollama create qwen3.5-exam -f Modelfile
-#   3. Run locally (fits comfortably in RTX 3050 4GB & RTX 5060 Ti 16GB):
+#   3. Run locally (fits comfortably in RTX 3050 4GB, RTX 3050 6GB, RTX 4050 6GB & RTX 5060 Ti 16GB):
 #      ollama run qwen3.5-exam
 
 FROM {{GGUF_PATH}}

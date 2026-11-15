@@ -58,7 +58,7 @@ Open `FineTune_Qwen_Exam_Generator.ipynb` in Google Colab with a **T4 GPU** runt
 
 1. Upload `dataset_train.jsonl` and `dataset_val.jsonl` (or mount Google Drive).
 2. The notebook loads `unsloth/Qwen3.5-2B` with **16-bit LoRA** (`load_in_4bit = False`) and trains using `train_on_responses_only` so loss is computed only on assistant exam outputs.
-3. Export the fine-tuned model to **GGUF (`q4_k_m`)** for local deployment (or save the PEFT LoRA adapter).
+3. Export the fine-tuned model to **GGUF (`Q4_K_M`)** for local deployment (or save the PEFT LoRA adapter). The notebook merges the fine-tuned weights, then converts and quantizes them with the llama.cpp revision used by Ollama 0.40.16. It checks for the separate SSM beta/alpha tensors required by that runtime; do not reuse an older GGUF that fails with a missing `ssm_beta.weight` error.
 
 ---
 
@@ -66,7 +66,7 @@ Open `FineTune_Qwen_Exam_Generator.ipynb` in Google Colab with a **T4 GPU** runt
 
 ### Option A: Ollama (Recommended)
 
-Generate a `Modelfile` from `Modelfile.template` pointing to your exported `.gguf` file, then create the Ollama model:
+Download the newly exported `qwen3.5_2b_exam_gguf/` directory from Colab. Generate a `Modelfile` from `Modelfile.template` pointing to that GGUF (do not reuse the older incompatible GGUF), then create the Ollama model:
 
 ```bash
 python local_runner.py --write-modelfile ./qwen3.5_2b_exam_gguf/Qwen3.5-2B.Q4_K_M.gguf

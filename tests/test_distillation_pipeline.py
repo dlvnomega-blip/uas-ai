@@ -397,9 +397,58 @@ class TestNotebookAndHygiene(unittest.TestCase):
             all_code_lines.append(src)
 
         joined = "\n".join(all_code_lines)
+        cells = nb.get("cells", [])
+        setup_source = next(
+            "".join(cell.get("source", []))
+            for cell in cells
+            if cell.get("cell_type") == "code"
+            and "loaded_numpy_version" in "".join(cell.get("source", []))
+        )
+        package_check_source = next(
+            "".join(cell.get("source", []))
+            for cell in cells
+            if cell.get("cell_type") == "code"
+            and "=== Package Versions ===" in "".join(cell.get("source", []))
+        )
+        step5_source = next(
+            "".join(cell.get("source", []))
+            for cell in cells
+            if cell.get("cell_type") == "code"
+            and "def generate_exam(" in "".join(cell.get("source", []))
+        )
+        self.assertIn("initial_numpy_version", setup_source)
+        self.assertIn("*numpy_pin", setup_source)
+        self.assertIn("loaded_numpy_version != installed_numpy_version", setup_source)
+        self.assertLess(package_check_source.index("import unsloth"), package_check_source.index("import torch"))
+        self.assertIn("max_new_tokens: int = 3072", step5_source)
+        self.assertIn("raw[-1800:]", step5_source)
+        step6_index = next(
+            idx
+            for idx, cell in enumerate(cells)
+            if cell.get("cell_type") == "code"
+            and "model.save_pretrained_merged" in "".join(cell.get("source", []))
+        )
+        step6_source = "".join(cells[step6_index].get("source", []))
+        prior_code = "\n".join(
+            "".join(cell.get("source", []))
+            for cell in cells[:step6_index]
+            if cell.get("cell_type") == "code"
+        )
+        self.assertIn("def run_cmd(", step6_source)
+        for prerequisite in (
+            "model, tokenizer = FastLanguageModel.from_pretrained(",
+            "response_part =",
+            "CANONICAL_SYSTEM_PROMPT =",
+        ):
+            self.assertIn(prerequisite, prior_code)
         self.assertIn("unsloth/Qwen3.5-2B", joined)
         self.assertIn("load_in_4bit = False", joined)
-        self.assertIn("q4_k_m", joined)
+        self.assertIn('"Q4_K_M"', joined)
+        self.assertIn("save_pretrained_merged", joined)
+        self.assertIn("convert_hf_to_gguf.py", joined)
+        self.assertIn("llama-quantize", joined)
+        self.assertIn("ssm_beta.weight", joined)
+        self.assertNotIn("model.save_pretrained_gguf(", joined)
         self.assertIn("<<<STUDENT_SHEET>>>", joined)
         self.assertIn("<<<ANSWER_KEY>>>", joined)
 
